@@ -8,10 +8,6 @@ def my_metric(y_true, y_predict):
     p = metrics.precision_score(y_true=y_true, y_pred=y_predict, average='macro')
     f = metrics.f1_score(y_true=y_true, y_pred=y_predict, average='macro')
 
-    # r = metrics.recall_score(y_true=y_true, y_pred=y_predict, average='macro', zero_division=1)
-    # p = metrics.precision_score(y_true=y_true, y_pred=y_predict, average='macro', zero_division=1)
-    # f = metrics.f1_score(y_true=y_true, y_pred=y_predict, average='macro', zero_division=1)
-
     return accuracy, r, p, f
 
 labels = constant.SUB_TYPES

@@ -1,21 +1,21 @@
 import tensorflow as tf
 import numpy as np
 
-
 def get_token_embeddings_word():
+    
     emb_path = '../data/cail_thulac.npy'
     word_embedding = np.cast[np.float32](np.load(emb_path))
+    
 
     with tf.variable_scope("shared_weight_matrix_word", reuse=tf.AUTO_REUSE):
         # embeddings = tf.constant(word_embedding, dtype=tf.float32, name="constant_embeddings")
         embeddings = tf.get_variable(name="word_embedding",
-                                     dtype=tf.float32,
+                                    dtype=tf.float32,
                                      shape=(164673, 200),
                                      initializer=tf.constant_initializer(word_embedding))
 
         embeddings = tf.concat((embeddings[:164672, :], tf.zeros(shape=[1, 200])), 0)
     return embeddings
-
 
 def label_smoothing(inputs, epsilon=0.1):
     '''Applies label smoothing. See 5.4 and https://arxiv.org/abs/1512.00567.
@@ -64,7 +64,7 @@ def noam_scheme(init_lr, global_step, warmup_steps=4000.):
 
 def dag_lstm(input):
     # input [batch_size, input_dim]
-    input = tf.expand_dims(input, 1)  # [N, 1, input_dim]
+    input = tf.expand_dims(input, 1) # [N, 1, input_dim]
     hidden_size = 128
     with tf.variable_scope('dag', reuse=tf.AUTO_REUSE):
         with tf.variable_scope('dag_lstm_task1', reuse=tf.AUTO_REUSE):
@@ -116,6 +116,3 @@ def dag_lstm(input):
                 dtype=tf.float32)
 
     return state_tuple_task1[1], state_tuple_task2[1], state_tuple_task3[1]
-
-def get_law_former(checkpoint_path):
-    return tf.keras.models.load_model(checkpoint_path)

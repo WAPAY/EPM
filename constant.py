@@ -1,4 +1,3 @@
-# trigger类型
 TRIGGER_SUP_TYPES = ['Property', 'Human_rights', 'Public_order', 'Public_health', 'Environment', 'Drug']
 # TRIGGER_SUB_TYPES = [
 #                    ['Trigger-Robbery', 'Trigger-Larceny', 'Trigger-Fraud', 'Trigger-Racketeering'],
@@ -27,7 +26,7 @@ TRIGGER_SUB_TYPES = [
 
 # TRIGGER_SUP_TYPES = ['Trigger']
 # TRIGGER_SUB_TYPES = [['Trigger']]
-# 角色类型
+
 ROLE_SUP_TYPES = ['Party', 'State', 'Object', 'Attribute']
 ROLE_SUB_TYPES = [
                   ['Criminal', 'Victim', 'Officer'],
@@ -44,6 +43,28 @@ ROLE_SUB_TYPES = [
 
 SUP_TYPES = ['None'] + TRIGGER_SUP_TYPES + ROLE_SUP_TYPES
 SUB_TYPES = ['None'] + [j for i in TRIGGER_SUB_TYPES for j in i] + [j for i in ROLE_SUB_TYPES for j in i]
+
+TRIGGER_ROLE_MATRIX = [[0 for j in range(len(SUB_TYPES))] for i in range(len(SUB_TYPES))]
+SUB_TYPE_ID = {SUB_TYPES[i]: i for i in range(len(SUB_TYPES))}
+TRIGGER_ROLE = {
+'Trigger-32': ['Criminal', 'Victim', 'Property', 'Quantity'],
+'Trigger-9': ['Criminal', 'Victim', 'Intention', 'Property', 'Quantity'],
+'Trigger-23': ['Criminal', 'Victim', 'Intention', 'Quantity'],
+'Trigger-34': ['Criminal', 'Victim', 'Intention', 'Instrument', 'Injury'],
+'Trigger-31': ['Criminal', 'Victim', 'Method'],
+'Trigger-78': ['Criminal', 'Victim', 'Method'],
+'Trigger-99': ['Criminal', 'Victim', 'Method', 'Officer', 'Injury'],
+'Trigger-76': ['Criminal', 'Intention', 'License', 'Quantity'],
+'Trigger-47': ['Criminal', 'Intention', 'Gambling_device', 'Quantity'],
+'Trigger-0': ['Criminal', 'Qualified', 'License', 'Injury'],
+'Trigger-6': ['Criminal', 'Qualified', 'License', 'Animal', 'Quantity'],
+'Trigger-88': ['Criminal', 'License', 'Qualified', 'Instrument', 'Plant', 'Quantity'],
+'Trigger-39': ['Criminal', 'Drug', 'Quantity']
+}
+
+for key, value in TRIGGER_ROLE.items():
+    for temp in value:
+        TRIGGER_ROLE_MATRIX[SUB_TYPE_ID[key]][SUB_TYPE_ID[temp]] = 1
 
 
 
@@ -81,19 +102,9 @@ for i in range(len(ROLE_SUP_TYPES)):
         count += 1
 
 
-# bert 路径
-# config_path = '../../nezha_wwm_base/bert_config.json'
-# checkpoint_path = '../../nezha_wwm_base/model.ckpt-691689'
-# dict_path = '../../nezha_wwm_base/vocab.txt'
+dict_path = 'tf_xsbert/vocab.txt'
 
-
-config_path = '../PLM/albert/albert_config_small_google.json'
-checkpoint_path = '../PLM/albert/albert_model.ckpt'
-dict_path = '../PLM/albert/vocab.txt'
-
-
-# embedding_dim = 768
-embedding_dim = 384
+embedding_dim = 768
 max_len = 512
 INF = 1e-10
 
@@ -105,10 +116,10 @@ law_selected = [264, 234, 266, 236, 303, 336, 239, 274, 277, 341, 280, 345, 348]
 law = []
 accu = []
 term = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-with open('../data/new_law.txt', 'r', encoding='utf8') as f:
+with open('data/new_law.txt', 'r', encoding='utf8') as f:
     for line in f:
         law.append(int(line.strip()))
-with open('../data/new_accu.txt', 'r', encoding='utf8') as f:
+with open('data/new_accu.txt', 'r', encoding='utf8') as f:
     for line in f:
         accu.append(line.strip())
 
@@ -138,4 +149,6 @@ len_term = len(term)
 # with open('law_keyword.txt', 'r', encoding='utf8') as f:
 #     for line in f:
 #         law_contents.append(line.strip().split('||')[1])
+
+
 

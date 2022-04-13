@@ -1,16 +1,9 @@
-'''
-pretraining之后, 再用event的信息。
-或者两者的数据一起训练
-'''
-
 import json
 import constant
 from bert4keras.tokenizers import Tokenizer
 import tensorflow as tf
+import config
 
-
-config_path = constant.config_path
-checkpoint_path = constant.checkpoint_path
 dict_path = constant.dict_path
 tokenizer = Tokenizer(dict_path, do_lower_case=True)
 
@@ -22,8 +15,6 @@ accu2id = {j: i for i, j in id2accu.items()}
 
 id2term = dict(enumerate(constant.term))
 term2id = {j: i for i, j in id2term.items()}
-
-
 
 def load_data(fpath, type="event"):
 
@@ -43,39 +34,29 @@ def load_data(fpath, type="event"):
             all_data = json.loads(line.strip())
             samples.append(all_data)
 
-
-
     for sample in samples:
-
         fact_cut = sample['fact_cut'].replace(' ', '')
-        # 加载summary
-
         if type == 'event':
             D_law.append(law2id[sample['law']])
             D_accu.append(accu2id[sample['accu']])
             D_term.append(term2id[sample['term']])
             D_flag.append(1)
         else:
-
             D_law.append(sample['law'])
             D_accu.append(sample['accu'])
             D_term.append(sample['term'])
             D_flag.append(0)
-
-
 
         if 'keywords_index' in sample.keys():
             index = sample['keywords_index']
             role = sample['role']
 
             current = []
-
             start_end = {}
             start_role = {}
 
             for i in range(len(index)):
                 start_end[index[i][0]] = index[i][1]
-
                 #single trigger ----------
                 # start_role[index[i][0]] = role[i]
 
@@ -131,11 +112,7 @@ def generator_fn(fpath_event, fpath_non_event):
 
         token_ids, labels = [tokenizer._token_start_id], [0]
 
-
-
         for w, l in txt_list:
-
-
 
             w_token_ids = tokenizer.encode(w)[0][1:-1]
             if len(token_ids) + len(w_token_ids) < constant.max_len:
@@ -201,18 +178,13 @@ def input_fn(fpath_event, fpath_non_event, batch_size, shuffle):
         output_types=types,
         args=[fpath_event, fpath_non_event])
 
-
     if shuffle:
         dataset = dataset.shuffle(32 * batch_size)
-
     # iterate forever
     dataset = dataset.padded_batch(batch_size, shapes, paddings).prefetch(2)
     dataset = dataset.repeat()
 
     return dataset
-
-
-
 
 def get_batch(fpath_event, fpath_non_event, batch_size, shuffle=False):
 
@@ -233,16 +205,11 @@ def get_batch(fpath_event, fpath_non_event, batch_size, shuffle=False):
 
 if __name__ == '__main__':
 
-
-    import config
     hp = config.parser.parse_args()
 
     train_batches, num_batches = get_batch(hp.train_event, hp.train_non_event, 1, shuffle=True)
-
     iter = tf.data.Iterator.from_structure(train_batches.output_types, train_batches.output_shapes)
-
     token_ids, segment_ids, labels, law, accu, term, flag, token_len = iter.get_next()
-
     train_init_op = iter.make_initializer(train_batches)
 
     with tf.Session() as sess:

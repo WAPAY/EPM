@@ -5,13 +5,11 @@ import sys
 from model import Transformer
 from tqdm import tqdm
 from data_load_combination import get_batch
-# from data_load_topjudge import get_batch
 from utils import save_hparams, save_variable_specs
 import os
 import math
 import logging
 import config
-
 import constant
 from metric import my_metric, NER_evaluation, NER_evaluation_new
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -50,22 +48,30 @@ with tf.Session() as sess:
         if not os.path.exists(hp.logdir): os.makedirs(hp.logdir)
         save_variable_specs(os.path.join(hp.logdir, "specs"))
         # ---------
-        var = tf.trainable_variables()
-        var_to_restore = [val for val in var if "embedding" in val.name or "encoder" in val.name]
-        saver_restore = tf.train.Saver(var_to_restore)
-        saver_restore.restore(sess, hp.pretraining_dir)
+        # pretraining
+        if hp.train_event == 'None':
+            var = tf.trainable_variables()
+            var_to_restore = [val for val in var if "Embedding-" in val.name or "Transformer-" in val.name]
+            saver_restore = tf.train.Saver(var_to_restore)
+            saver_restore.restore(sess, hp.pretraining)
+
 
         # ---------
-        # var = tf.trainable_variables()
-        # var_to_restore = [val for val in var if "Embedding-" in val.name
-        #                   or "Transformer-" in val.name
-        #                   or "classification_law" in val.name
-        #                   or "classification_accu" in val.name
-        #                   or "classification_term" in val.name]
-        # saver_restore = tf.train.Saver(var_to_restore)
-        # # saver_restore.restore(sess, '../log_prediction_small/EPM_wo_event/small_all_0.3_32batch/training/model_E05-15085')
-        # saver_restore.restore(sess,
-        #                       '../log_prediction_large/EPM_wo_event/large_all_0.3_64batch/training/model_E15-372645')
+        # fine-tune
+        else:
+            var = tf.trainable_variables()
+            var_to_restore = [val for val in var if "Embedding-" in val.name
+                              or "Transformer-" in val.name
+                              or "law_content_attention" in val.name
+                              or "classification_law" in val.name
+                              or "classification_accu" in val.name
+                              or "classification_term" in val.name]
+            saver_restore = tf.train.Saver(var_to_restore)
+            saver_restore.restore(sess,
+                                  '../log_prediction_small/EPM_wo_event/small_all_0.3_32batch/training/model_E05-15085')
+
+
+
 
 
     else:
@@ -77,8 +83,7 @@ with tf.Session() as sess:
     sess.run(train_init_op)
     total_steps = hp.num_epochs * num_train_batches
     _gs = sess.run(global_step)
-    
-    best_mean_f1 = 0
+
     
     
     for i in tqdm(range(_gs, total_steps + 1)):
@@ -90,11 +95,11 @@ with tf.Session() as sess:
         if _gs and _gs % num_train_batches == 0:
             logging.info("epoch {} is done".format(epoch))
 
-#             logging.info("# save models")
-#             model_output = "model_E%02d" % (epoch)
-#             ckpt_name = os.path.join(hp.logdir, model_output)
-#             saver.save(sess, ckpt_name, global_step=_gs)
-#             logging.info("after training of {} epochs, {} has been saved.".format(epoch, ckpt_name))
+            logging.info("# save models")
+            model_output = "model_E%02d" % (epoch)
+            ckpt_name = os.path.join(hp.logdir, model_output)
+            saver.save(sess, ckpt_name, global_step=_gs)
+            logging.info("after training of {} epochs, {} has been saved.".format(epoch, ckpt_name))
 
             sess.run(test_init_op)
 
@@ -160,50 +165,8 @@ with tf.Session() as sess:
                 for me in role_metrics:
                     f_out.write(str(me) + '\n')
                 f_out.write('\n')
-                
-                current_mean_f1 = f1_law
-                if hp.bias_task == 'accu':
-                    current_mean_f1 = f1_accu
-                if hp.bias_task == 'term':
-                    current_mean_f1 = f1_term
-                
-                if current_mean_f1 > best_mean_f1:
-                    best_mean_f1 = current_mean_f1
-                    logging.info("# save models")
-                    model_output = "model_E%02d" % (epoch)
-                    ckpt_name = os.path.join(hp.logdir, model_output)
-                    saver.save(sess, ckpt_name, global_step=_gs)
-
-                    with open(hp.testdir + '/Best', 'w', encoding='utf8') as f_best:
-                        f_best.write(str(a_law) + '\n')
-                        f_best.write(str(p_law) + '\n')
-                        f_best.write(str(r_law) + '\n')
-                        f_best.write(str(f1_law) + '\n')
-                        f_best.write('\n')
-
-                        f_best.write(str(a_accu) + '\n')
-                        f_best.write(str(p_accu) + '\n')
-                        f_best.write(str(r_accu) + '\n')
-                        f_best.write(str(f1_accu) + '\n')
-                        f_best.write('\n')
-
-                        f_best.write(str(a_term) + '\n')
-                        f_best.write(str(p_term) + '\n')
-                        f_best.write(str(r_term) + '\n')
-                        f_best.write(str(f1_term) + '\n')
-                        f_best.write('\n')
-
-                        for me in role_metrics:
-                            f_best.write(str(me) + '\n')
-                        f_best.write('\n')
-
-
 
             logging.info("# fall back to train model")
             sess.run(train_init_op)
     summary_writer.close()
-
-
-
-
 logging.info("Done")
