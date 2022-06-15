@@ -144,11 +144,12 @@ class Transformer:
         loss_term_mask = tf.reduce_sum(true_term * tf.log(term_softmax_mask), axis=-1)
         loss_term_original = tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits_term, labels=true_term)
 
+        logits_law_argmax = tf.argmax(logits_law, axis=-1)
         loss_accu = tf.reduce_mean(
-            tf.where(tf.equal(tf.cast(logits_accu_argmax, tf.int32), accu), loss_accu_mask, loss_accu_original))
+            tf.where(tf.equal(tf.cast(logits_law_argmax, tf.int32), law), loss_accu_mask, loss_accu_original))
 
         loss_term = tf.reduce_mean(
-            tf.where(tf.equal(tf.cast(logits_term_argmax, tf.int32), term), loss_term_mask, loss_term_original))
+            tf.where(tf.equal(tf.cast(logits_law_argmax, tf.int32), law), loss_term_mask, loss_term_original))
 
         loss_law = tf.reduce_mean(
             tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits_law, labels=true_law))
