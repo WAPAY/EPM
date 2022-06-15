@@ -118,13 +118,13 @@ class Transformer:
 
         logits_law, logits_accu, logits_term = self.legal_predict(memory, logits_role, flag, token_len)
 
-        # true_law = label_smoothing(tf.one_hot(law, depth=constant.len_law))
-        # true_accu = label_smoothing(tf.one_hot(accu, depth=constant.len_accu))
-        # true_term = label_smoothing(tf.one_hot(term, depth=constant.len_term))
+        true_law = label_smoothing(tf.one_hot(law, depth=constant.len_law))
+        true_accu = label_smoothing(tf.one_hot(accu, depth=constant.len_accu))
+        true_term = label_smoothing(tf.one_hot(term, depth=constant.len_term))
 
-        true_law = tf.one_hot(law, depth=constant.len_law)
-        true_accu = tf.one_hot(accu, depth=constant.len_accu)
-        true_term = tf.one_hot(term, depth=constant.len_term)
+#         true_law = tf.one_hot(law, depth=constant.len_law)
+#         true_accu = tf.one_hot(accu, depth=constant.len_accu)
+#         true_term = tf.one_hot(term, depth=constant.len_term)
 
         #-----------
         law_indexs = tf.one_hot(tf.argmax(logits_law, axis=-1), depth=101, axis=-1)
